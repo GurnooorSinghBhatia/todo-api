@@ -15,6 +15,20 @@ pipeline {
         PROD_PORT     = '3002'
         BUILD_VERSION = "1.0.${BUILD_NUMBER}"
         NODE_ENV      = 'test'
+
+        // ── PATH FIX for macOS Jenkins ────────────────────────────────────────
+        // Jenkins on macOS runs with a restricted shell that doesn't inherit
+        // your user PATH. We explicitly add all common Node/npm/pm2 locations.
+        //
+        // Homebrew Apple Silicon (M1/M2/M3): /opt/homebrew/bin
+        // Homebrew Intel Mac:                /usr/local/bin
+        // nvm default:                       ~/.nvm/versions/node/.../bin
+        // System Node (fallback):            /usr/local/bin, /usr/bin
+        //
+        // HOW TO FIND YOUR EXACT PATHS – run in your Mac terminal:
+        //   which node && which npm && which pm2
+        // Then add those directories here if they differ from the ones below.
+        PATH = "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${env.PATH}"
     }
 
     // ── Pipeline options ──────────────────────────────────────────────────────
@@ -34,6 +48,12 @@ pipeline {
         stage('Build') {
             steps {
                 echo "╔══ BUILD – ${APP_NAME} v${BUILD_VERSION} ══╗"
+
+                // ── Diagnostics: confirm Jenkins can find required tools ──────
+                sh 'echo "PATH = $PATH"'
+                sh 'which node  && node  --version || echo "ERROR: node not found – check PATH"'
+                sh 'which npm   && npm   --version || echo "ERROR: npm not found  – check PATH"'
+                sh 'which pm2   && pm2   --version || echo "WARNING: pm2 not found – run: npm install -g pm2"'
 
                 // Install all dependencies (including devDependencies for later stages)
                 sh 'npm install'
