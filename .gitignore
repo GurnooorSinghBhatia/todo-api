@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+*.tar.gz
+*.log
+logs/
+npm-audit-report.json
+eslint-report.json
+monitoring.log
+.DS_Store
